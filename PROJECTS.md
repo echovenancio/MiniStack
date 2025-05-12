@@ -8,7 +8,7 @@ Objetivo: servir como case de projeto full stack para portfólio.
 ## 📌 Planejamento Inicial
 
 - [X] Definir escopo mínimo (perguntas, respostas, votos, tags, comentários)
-- [ ] Modelagem do banco (User, Question, Answer, Comment, Tag, Vote)
+- [X] Modelagem do banco (User, Question, Answer, Comment, Tag, Vote)
 - [ ] Escolher dependências (Spring Security, JWT, Angular Material, etc)
 - [ ] Criar README inicial com visão geral
 - [X] Montar este board no GitHub Projects
