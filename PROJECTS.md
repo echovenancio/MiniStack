@@ -7,11 +7,11 @@ Objetivo: servir como case de projeto full stack para portfólio.
 
 ## 📌 Planejamento Inicial
 
-- [ ] Definir escopo mínimo (perguntas, respostas, votos, tags, comentários)
+- [X] Definir escopo mínimo (perguntas, respostas, votos, tags, comentários)
 - [ ] Modelagem do banco (User, Question, Answer, Comment, Tag, Vote)
 - [ ] Escolher dependências (Spring Security, JWT, Angular Material, etc)
 - [ ] Criar README inicial com visão geral
-- [ ] Montar este board no GitHub Projects
+- [X] Montar este board no GitHub Projects
 
 ---
 
@@ -34,7 +34,6 @@ Objetivo: servir como case de projeto full stack para portfólio.
 ### 🔍 Utilitários
 
 - [ ] Busca textual por título/conteúdo
-- [ ] Filtro por tags
 - [ ] Paginação e ordenação (mais votadas, recentes)
 - [ ] Documentação Swagger/OpenAPI
 
@@ -70,11 +69,6 @@ Objetivo: servir como case de projeto full stack para portfólio.
 ## 🚀 DevOps
 
 - [ ] Dockerizar backend + frontend
-- [ ] Postgres via Docker Compose
-- [ ] Seed inicial com perguntas e usuários fake
-- [ ] Deploy do backend (Render/Railway/Heroku)
-- [ ] Deploy do frontend (Vercel/Netlify)
-- [ ] Configurar CI (lint/test/build)
 
 ---
 
