@@ -29,7 +29,9 @@ import com.echovenancio.ministack.entity.Tag;
 import com.echovenancio.ministack.entity.User;
 import com.echovenancio.ministack.models.CreatePostRequest;
 import com.echovenancio.ministack.models.PostDto;
+import com.echovenancio.ministack.models.ReplyDto;
 import com.echovenancio.ministack.repository.PostRepository;
+import com.echovenancio.ministack.repository.ReplyRepository;
 import com.echovenancio.ministack.repository.TagRepository;
 import com.echovenancio.ministack.repository.UserRepository;
 
@@ -46,6 +48,9 @@ public class PostController {
     @Autowired
     private TagRepository tagRepo;
 
+    @Autowired
+    private ReplyRepository replyRepo;
+
     @GetMapping
     public Page<PostDto> getPosts(@RequestParam(required = false) String title,
             @RequestParam(required = false) String tag,
@@ -53,6 +58,16 @@ public class PostController {
             Pageable pageable) {
         return postRepo.searchPosts(title, tag, body, pageable)
                 .map(PostDto::new);
+    }
+
+    @GetMapping("/{postId}/replies")
+    public Page<ReplyDto> getReplies(@PathVariable Long postId, Pageable pageable) {
+        if (postId == null) {
+            return Page.empty();
+        }
+        Page<ReplyDto> replies = replyRepo.findByPostId(postId, pageable)
+                .map(ReplyDto::new);
+        return replies;
     }
 
     @PostMapping
