@@ -65,12 +65,12 @@ public class User {
         this.password = password;
     }
 
-	public Set<Post> getPosts() {
-		return posts;
-	}
+    public Set<Post> getPosts() {
+        return posts;
+    }
 
-	public void setPosts(Set<Post> posts) {
-		this.posts = posts;
-	}
+    public void setPosts(Set<Post> posts) {
+        this.posts = posts;
+    }
 
 }
