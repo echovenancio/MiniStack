@@ -94,4 +94,25 @@ public class PostController {
         postRepo.delete(post);
         return ResponseEntity.ok().build();
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<PostDto> updatePost(@PathVariable Long id, @RequestBody CreatePostRequest updatedPost) {
+        Post post = postRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        if (!post.getUser().getEmail().equals(email)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to update this post");
+        }
+        post.setTitle(updatedPost.getTitle());
+        post.setBody(updatedPost.getBody());
+        Set<Tag> tags = Arrays.stream(updatedPost.getTags())
+                .map(tagName -> tagRepo.findByName(tagName)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.BAD_REQUEST, "Tag not found: " + tagName)))
+                .collect(Collectors.toSet());
+        post.setTags(tags);
+        PostDto postDto = new PostDto(postRepo.save(post));
+        return ResponseEntity.ok(postDto);
+    }
 }
