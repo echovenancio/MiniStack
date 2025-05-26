@@ -10,8 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,7 +55,7 @@ public class PostController {
     }
 
     @PostMapping
-    public Post createPost(@RequestBody CreatePostRequest newPost) {
+    public ResponseEntity<PostDto> createPost(@RequestBody CreatePostRequest newPost) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
         User user = userRepo.findByEmail(email)
@@ -65,15 +67,31 @@ public class PostController {
                 .map(tagName -> tagRepo.findByName(tagName)
                         .orElseThrow(() -> new ResponseStatusException(
                                 HttpStatus.BAD_REQUEST, "Tag not found: " + tagName)))
-                .collect(Collectors.toSet()); 
+                .collect(Collectors.toSet());
         post.setBody(newPost.getBody());
         post.setTags(tags);
         post.setUser(user);
-        return postRepo.save(post);
+        PostDto postDto = new PostDto(postRepo.save(post));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(postDto);
     }
 
     @GetMapping("/{id}")
     public Post getPostById(@PathVariable Long id) {
-        return postRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post not found"));
+        return postRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePost(@PathVariable Long id) {
+        Post post = postRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        if (!post.getUser().getEmail().equals(email)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to delete this post");
+        }
+        postRepo.delete(post);
+        return ResponseEntity.ok().build();
     }
 }
