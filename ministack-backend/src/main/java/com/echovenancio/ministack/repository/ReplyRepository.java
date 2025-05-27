@@ -8,4 +8,5 @@ import com.echovenancio.ministack.entity.Reply;
 
 public interface ReplyRepository extends JpaRepository<Reply, Long> {
     Page<Reply> findByPostId(Long postId, Pageable pageable);
+    Page<Reply> findByParentReplyId(Long parentReplyId, Pageable pageable);
 }

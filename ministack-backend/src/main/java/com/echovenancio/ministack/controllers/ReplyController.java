@@ -1,6 +1,8 @@
 package com.echovenancio.ministack.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -45,6 +47,15 @@ public class ReplyController {
         Reply reply = replyRepo.findById(replyId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reply not found"));
         return ResponseEntity.ok(new ReplyDto(reply));
+    }
+
+    @GetMapping("/{replyId}/nested")
+    public ResponseEntity<Page<ReplyDto>> getNestedReplies(@PathVariable Long postId, @PathVariable Long replyId, Pageable pageable) {
+        if (postId == null || replyId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Post ID and Reply ID must not be null");
+        }
+        Page<Reply> replies = replyRepo.findByParentReplyId(replyId, pageable);
+        return ResponseEntity.ok(replies.map(ReplyDto::new));
     }
 
     @PostMapping("/")
