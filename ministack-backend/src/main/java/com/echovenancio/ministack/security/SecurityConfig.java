@@ -1,6 +1,5 @@
 package com.echovenancio.ministack.security;
 
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -12,43 +11,61 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
 
 import com.echovenancio.ministack.service.MyUserDetailsService;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig { // No longer extends WebSecurityConfigurerAdapter
+public class SecurityConfig {
 
-    @Autowired
-    private JWTFilter filter;
-    @Autowired
-    private MyUserDetailsService uds; // Still useful for providing UserDetailsService
+    private final JWTFilter jwtFilter;
+    private final MyUserDetailsService uds;
 
-    // No longer need to autowire UserRepository directly in SecurityConfig
-    // if MyUserDetailsService is handling user retrieval
+    public SecurityConfig(JWTFilter jwtFilter, MyUserDetailsService uds) {
+        this.jwtFilter = jwtFilter;
+        this.uds = uds;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Replaced .csrf().disable()
-                .httpBasic(httpBasic -> httpBasic.disable()) // Replaced .httpBasic().disable()
+                .csrf(csrf -> csrf.disable())
+                .httpBasic(httpBasic -> httpBasic.disable())
+                .formLogin(form -> form.disable()) // Explicitly disable form login
+                .logout(logout -> logout.disable()) // Also disable logout if you don't use it
                 .cors(cors -> {
-                }) // .cors() without explicit configuration usually means default Spring Boot CORS
-                .authorizeHttpRequests(authorize -> authorize // Replaced .authorizeHttpRequests()
-                        .requestMatchers("/api/auth/**").permitAll() // Updated to .requestMatchers()
-                        .requestMatchers("/api/user/**").hasRole("USER") // Updated to .requestMatchers()
-                        .anyRequest().authenticated() // Ensure all other requests are authenticated
-                )
-                .userDetailsService(uds) // Still works this way
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint((request, response, authException) -> response
-                                .sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")))
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                }) // use defaults
 
-        http.addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
+                // Disable the RequestCache to prevent saving requests and redirecting
+                .requestCache(cache -> cache.disable()) // <-- ADD THIS
+
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll())
+
+                .sessionManagement(sess -> sess
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        .sessionFixation().none() // Explicitly disable session fixation for stateless
+                )
+
+                .exceptionHandling(eh -> eh
+                        // Explicitly set YOUR custom authentication entry point.
+                        // This makes sure it doesn't fall back to LoginUrlAuthenticationEntryPoint.
+                        .authenticationEntryPoint(
+                                (req, res, ex) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
+                        // You might also want to add an AccessDeniedHandler for 403 Forbidden scenarios
+                        .accessDeniedHandler(
+                                (req, res, ex) -> res.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden")))
+
+                .userDetailsService(uds);
+
+        // Add your JWT filter before the standard authentication filter
+        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -56,12 +73,5 @@ public class SecurityConfig { // No longer extends WebSecurityConfigurerAdapter
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    // AuthenticationManager is now obtained differently
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
-            throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
     }
 }

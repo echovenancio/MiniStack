@@ -51,11 +51,12 @@ public class PostController {
     @Autowired
     private ReplyRepository replyRepo;
 
-    @GetMapping
+    @GetMapping("/")
     public Page<PostDto> getPosts(@RequestParam(required = false) String title,
             @RequestParam(required = false) String tag,
             @RequestParam(required = false) String body,
             Pageable pageable) {
+        System.out.println(">>> createPost hit");
         return postRepo.searchPosts(title, tag, body, pageable)
                 .map(PostDto::new);
     }
