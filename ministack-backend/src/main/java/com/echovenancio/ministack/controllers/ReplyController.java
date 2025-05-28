@@ -22,9 +22,13 @@ import com.echovenancio.ministack.entity.Reply;
 import com.echovenancio.ministack.entity.User;
 import com.echovenancio.ministack.models.CreateReplyRequest;
 import com.echovenancio.ministack.models.ReplyDto;
+import com.echovenancio.ministack.models.UpdateReplyRequest;
 import com.echovenancio.ministack.repository.PostRepository;
 import com.echovenancio.ministack.repository.ReplyRepository;
 import com.echovenancio.ministack.repository.UserRepository;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
 @RequestMapping("/api/posts/{postId}/replies")
@@ -38,6 +42,16 @@ public class ReplyController {
 
     @Autowired
     private UserRepository userRepo;
+
+    @GetMapping("/")
+    public Page<ReplyDto> getReplies(@PathVariable Long postId, Pageable pageable) {
+        if (postId == null) {
+            return Page.empty();
+        }
+        Page<ReplyDto> replies = replyRepo.findByPostIdAndParentReplyIsNull(postId, pageable)
+                .map(ReplyDto::new);
+        return replies;
+    }
 
     @GetMapping("/{replyId}")
     public ResponseEntity<ReplyDto> getReply(@PathVariable Long postId, @PathVariable Long replyId) {
@@ -58,6 +72,9 @@ public class ReplyController {
         return ResponseEntity.ok(replies.map(ReplyDto::new));
     }
 
+    @Operation(
+        summary = "Create a new reply to a post", 
+        security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/")
     public ResponseEntity<ReplyDto> createReply(@PathVariable Long postId, @RequestBody CreateReplyRequest req) {
         if (postId == null) {
@@ -81,6 +98,9 @@ public class ReplyController {
                 .body(new ReplyDto(replyRepo.save(reply)));
     }
 
+    @Operation(
+        summary = "Delete a reply", 
+        security = @SecurityRequirement(name = "bearerAuth"))
     @DeleteMapping("/{replyId}")
     public ResponseEntity<Void> deleteReply(@PathVariable Long postId, @PathVariable Long replyId) {
         if (postId == null || replyId == null) {
@@ -97,8 +117,11 @@ public class ReplyController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(
+        summary = "Update a reply", 
+        security = @SecurityRequirement(name = "bearerAuth"))
     @PutMapping("/{replyId}")
-    public ResponseEntity<ReplyDto> updateReply(@PathVariable Long postId, @PathVariable Long replyId, @RequestBody ReplyDto replyDto) {
+    public ResponseEntity<ReplyDto> updateReply(@PathVariable Long postId, @PathVariable Long replyId, @RequestBody UpdateReplyRequest updateReplyRequest) {
         if (postId == null || replyId == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Post ID and Reply ID must not be null");
         }
@@ -109,7 +132,7 @@ public class ReplyController {
         if (!reply.getUser().getEmail().equals(email)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to update this reply");
         }
-        reply.setBody(replyDto.getBody());
+        reply.setBody(updateReplyRequest.getBody());
         replyRepo.save(reply);
         return ResponseEntity.ok(new ReplyDto(reply));
     }

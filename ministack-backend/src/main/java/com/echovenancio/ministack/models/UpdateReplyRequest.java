@@ -12,10 +12,9 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class CreateReplyRequest {
+public class UpdateReplyRequest {
 
     @Size(min = 10, message = "Body must be at least 10 characters long")
     private String body;
 
-    private Long parentReplyId; // Optional, for nested replies
 }

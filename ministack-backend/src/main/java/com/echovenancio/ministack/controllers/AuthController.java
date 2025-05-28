@@ -1,5 +1,6 @@
 package com.echovenancio.ministack.controllers;
 
+import java.io.Console;
 import java.util.Collections;
 import java.util.Map;
 
@@ -44,6 +45,9 @@ public class AuthController {
         user.setEmail(req.getEmail());
         user.setPassword(encodedPass);
         user.setUsername(req.getUsername());
+        // log
+        System.out.println("Registering user: " + user.getEmail() + " with password: " + req.getPassword() +
+                " and encoded password: " + encodedPass + " and username: " + user.getUsername() + " and id: " + user.getId());
         user = userRepo.save(user);
         String token = jwtUtil.generateToken(user.getEmail());
         return Collections.singletonMap("jwt-token", token);

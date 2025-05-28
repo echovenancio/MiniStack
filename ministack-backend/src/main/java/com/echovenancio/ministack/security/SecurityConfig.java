@@ -47,11 +47,8 @@ public class SecurityConfig {
                 .requestCache(cache -> cache.disable()) // <-- ADD THIS
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll() // Allow login endpoint
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll() // Allow registration endpoint
+                        .requestMatchers("/api/auth/**").permitAll() // Allow auth endpoint
                         .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll() // Allow public access to posts
-                        .requestMatchers(HttpMethod.GET, "/api/posts/{postId}/replies/**").permitAll() // Allow public access to replies
-                        .requestMatchers(HttpMethod.GET, "/api/replies/{replyId}/nested").permitAll() // Allow public access to nested replies
                         .requestMatchers("/swagger-ui/**").permitAll() // Allow Swagger UI
                         .requestMatchers("/v3/api-docs/**").permitAll() // Allow OpenAPI docs
                         .requestMatchers("/swagger-ui.html").permitAll() // Allow Swagger UI HTML

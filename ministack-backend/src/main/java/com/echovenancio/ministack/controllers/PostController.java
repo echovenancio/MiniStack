@@ -3,6 +3,7 @@ package com.echovenancio.ministack.controllers;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -35,6 +36,9 @@ import com.echovenancio.ministack.repository.ReplyRepository;
 import com.echovenancio.ministack.repository.TagRepository;
 import com.echovenancio.ministack.repository.UserRepository;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
@@ -53,23 +57,27 @@ public class PostController {
 
     @GetMapping("/")
     public Page<PostDto> getPosts(@RequestParam(required = false) String query,
-            @RequestParam(required = false) String tag,
+            @RequestParam(required = false) String tags,
             @RequestParam(required = false) Pageable pageable) {
         System.out.println(">>> createPost hit");
-        return postRepo.fullTextSearch(query, tag, pageable)
+        if (query != null && query.isBlank()) {
+            query = null;
+        }
+        List<String> tagsList = tags != null ? Arrays.asList(tags.split(",")) : null;
+        if (tagsList != null) {
+            for (String tag : tagsList) {
+                tagRepo.findByName(tag)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.BAD_REQUEST, "Tag not found: " + tag));
+            }
+        } else {
+            tags = null;
+        }
+        return postRepo.fullTextSearch(query, tags, pageable)
                 .map(PostDto::new);
     }
 
-    @GetMapping("/{postId}/replies")
-    public Page<ReplyDto> getReplies(@PathVariable Long postId, Pageable pageable) {
-        if (postId == null) {
-            return Page.empty();
-        }
-        Page<ReplyDto> replies = replyRepo.findByPostId(postId, pageable)
-                .map(ReplyDto::new);
-        return replies;
-    }
-
+    @Operation(summary = "Create a new post", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping
     public ResponseEntity<PostDto> createPost(@RequestBody CreatePostRequest newPost) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -98,6 +106,7 @@ public class PostController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
     }
 
+    @Operation(summary = "Delete a post by ID", security = @SecurityRequirement(name = "bearerAuth"))
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePost(@PathVariable Long id) {
         Post post = postRepo.findById(id)
@@ -107,10 +116,15 @@ public class PostController {
         if (!post.getUser().getEmail().equals(email)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to delete this post");
         }
+        post.getReplies().forEach(reply -> {
+            reply.setPost(null); // Remove the post reference from each reply
+            replyRepo.save(reply);
+        });
         postRepo.delete(post);
         return ResponseEntity.ok().build();
     }
 
+    @Operation(summary = "Update a post by ID", security = @SecurityRequirement(name = "bearerAuth"))
     @PutMapping("/{id}")
     public ResponseEntity<PostDto> updatePost(@PathVariable Long id, @RequestBody CreatePostRequest updatedPost) {
         Post post = postRepo.findById(id)
