@@ -51,6 +51,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll() // Allow registration endpoint
                         .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll() // Allow public access to posts
                         .requestMatchers(HttpMethod.GET, "/api/posts/{postId}/replies/**").permitAll() // Allow public access to replies
+                        .requestMatchers(HttpMethod.GET, "/api/replies/{replyId}/nested").permitAll() // Allow public access to nested replies
+                        .requestMatchers("/swagger-ui/**").permitAll() // Allow Swagger UI
+                        .requestMatchers("/v3/api-docs/**").permitAll() // Allow OpenAPI docs
+                        .requestMatchers("/swagger-ui.html").permitAll() // Allow Swagger UI HTML
                         .anyRequest().authenticated())
 
                 .sessionManagement(sess -> sess
