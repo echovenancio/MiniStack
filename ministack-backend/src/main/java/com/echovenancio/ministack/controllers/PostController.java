@@ -52,12 +52,11 @@ public class PostController {
     private ReplyRepository replyRepo;
 
     @GetMapping("/")
-    public Page<PostDto> getPosts(@RequestParam(required = false) String title,
+    public Page<PostDto> getPosts(@RequestParam(required = false) String query,
             @RequestParam(required = false) String tag,
-            @RequestParam(required = false) String body,
-            Pageable pageable) {
+            @RequestParam(required = false) Pageable pageable) {
         System.out.println(">>> createPost hit");
-        return postRepo.searchPosts(title, tag, body, pageable)
+        return postRepo.fullTextSearch(query, tag, pageable)
                 .map(PostDto::new);
     }
 
