@@ -1,6 +1,9 @@
 package com.echovenancio.ministack.controllers;
 
+import java.security.Principal;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,11 +16,20 @@ import com.echovenancio.ministack.repository.UserRepository;
 @RequestMapping("/api/user")
 public class UserController {
 
-    @Autowired private UserRepository userRepo;
+   private final UserRepository userRepo;
+
+    public UserController(UserRepository userRepo) {
+        this.userRepo = userRepo;
+    }
 
     @GetMapping("/info")
-    public User getUserDetails(){
-        String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return userRepo.findByEmail(email).get();
+    public ResponseEntity<User> getUserDetails(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).build(); // Unauthorized
+        }
+        String email = principal.getName();
+        return userRepo.findByEmail(email)
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

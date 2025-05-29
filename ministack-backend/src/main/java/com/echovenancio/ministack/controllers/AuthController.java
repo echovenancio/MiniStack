@@ -1,9 +1,11 @@
 package com.echovenancio.ministack.controllers;
 
+import java.io.Console;
 import java.util.Collections;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
@@ -23,34 +25,40 @@ import com.echovenancio.ministack.security.JWTUtil;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    @Autowired
-    private UserRepository userRepo;
-    @Autowired
-    private JWTUtil jwtUtil;
-    @Autowired
-    private AuthenticationManager authManager;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final UserRepository userRepo;
+    private final JWTUtil jwtUtil;
+    private final AuthenticationManager authManager;
+    private final PasswordEncoder passwordEncoder;
+
+    public AuthController(UserRepository userRepo, JWTUtil jwtUtil, AuthenticationManager authManager, PasswordEncoder passwordEncoder) {
+        this.userRepo = userRepo;
+        this.jwtUtil = jwtUtil;
+        this.authManager = authManager;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @PostMapping("/register")
-    public Map<String, Object> registerHandler(@RequestBody RegisterRequest req) {
-
-        if (!req.getPassword().equals(req.getConfirmPassword())) {
-            throw new RuntimeException("Passwords do not match");
+    public ResponseEntity<Map<String, Object>> registerHandler(@RequestBody RegisterRequest req) {
+        try {
+            if (!req.getPassword().equals(req.getConfirmPassword())) {
+                return ResponseEntity.badRequest()
+                        .body(Collections.singletonMap("error", "Passwords do not match"));
+            }
+            String encodedPass = passwordEncoder.encode(req.getPassword());
+            User user = new User();
+            user.setEmail(req.getEmail());
+            user.setPassword(encodedPass);
+            user.setUsername(req.getUsername());
+            user = userRepo.save(user);
+            String token = jwtUtil.generateToken(user.getEmail());
+            return ResponseEntity.ok(Collections.singletonMap("jwt-token", token));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Collections.singletonMap("error", "Internal server error"));
         }
-
-        String encodedPass = passwordEncoder.encode(req.getPassword());
-        User user = new User();
-        user.setEmail(req.getEmail());
-        user.setPassword(encodedPass);
-        user.setUsername(req.getUsername());
-        user = userRepo.save(user);
-        String token = jwtUtil.generateToken(user.getEmail());
-        return Collections.singletonMap("jwt-token", token);
     }
 
     @PostMapping("/login")
-    public Map<String, Object> loginHandler(@RequestBody LoginCredentials body) {
+    public ResponseEntity<Map<String, Object>> loginHandler(@RequestBody LoginCredentials body) {
         try {
             UsernamePasswordAuthenticationToken authInputToken = new UsernamePasswordAuthenticationToken(
                     body.getEmail(), body.getPassword());
@@ -59,9 +67,11 @@ public class AuthController {
 
             String token = jwtUtil.generateToken(body.getEmail());
 
-            return Collections.singletonMap("jwt-token", token);
+            return ResponseEntity.ok(Collections.singletonMap("jwt-token", token));
         } catch (AuthenticationException authExc) {
-            throw new RuntimeException("Invalid Login Credentials");
+            return ResponseEntity.status(401).body(Collections.singletonMap("error", "Invalid credentials"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Collections.singletonMap("error", "Internal server error"));
         }
     }
 
