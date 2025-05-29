@@ -11,7 +11,8 @@ import com.echovenancio.ministack.repository.ReplyRepository;
 import com.echovenancio.ministack.repository.TagRepository;
 import com.echovenancio.ministack.repository.UserRepository;
 import com.echovenancio.ministack.security.JWTFilter;
-
+import com.echovenancio.ministack.security.JWTUtil;
+import com.echovenancio.ministack.service.MyUserDetailsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -42,7 +44,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf; 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -52,9 +54,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = PostController.class, excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
-        JWTFilter.class }
-))
+@WebMvcTest(controllers = PostController.class)
 @AutoConfigureMockMvc(addFilters = true)
 @ContextConfiguration(classes = TestSecurityConfig.class)
 class PostControllerTest {
@@ -67,6 +67,12 @@ class PostControllerTest {
 
     @MockitoBean
     private PostRepository postRepo;
+
+    @MockitoBean 
+    private MyUserDetailsService userDetailsService;
+
+    @MockitoBean
+    private JWTUtil jwtUtil;
 
     @MockitoBean
     private UserRepository userRepo;
@@ -98,7 +104,7 @@ class PostControllerTest {
     @Test
     void testGetPosts_Success_NoParams() throws Exception {
         List<Post> posts = Collections.singletonList(mockPost);
-        Pageable pageable = PageRequest.of(0, 20); 
+        Pageable pageable = PageRequest.of(0, 20);
         when(postRepo.fullTextSearch(eq(null), eq(null), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(posts, pageable, posts.size()));
 
@@ -108,7 +114,7 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.value.content[0].id").value(String.valueOf(mockPost.getId())))
                 .andExpect(jsonPath("$.value.content[0].title").value(mockPost.getTitle()))
                 .andExpect(jsonPath("$.value.content[0].authorUsername").value(mockUser.getUsername()))
-                .andExpect(jsonPath("$.error").doesNotExist()); 
+                .andExpect(jsonPath("$.error").doesNotExist());
     }
 
     @Test
@@ -138,14 +144,14 @@ class PostControllerTest {
     void testGetPosts_Error_TagNotFound() throws Exception {
         String tags = "java,unknown";
         when(tagRepo.findByName("java")).thenReturn(Optional.of(mockTag1));
-        when(tagRepo.findByName("unknown")).thenReturn(Optional.empty()); 
+        when(tagRepo.findByName("unknown")).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/posts/")
                 .param("tags", tags)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.value").doesNotExist()) 
-                .andExpect(jsonPath("$.error.message").value("Tag not found")) 
+                .andExpect(jsonPath("$.value").doesNotExist())
+                .andExpect(jsonPath("$.error.message").value("Tag not found"))
                 .andExpect(jsonPath("$.error.code").value("400"));
     }
 
@@ -159,7 +165,7 @@ class PostControllerTest {
                 .thenReturn(new PageImpl<>(posts, pageable, posts.size()));
 
         mockMvc.perform(get("/api/posts/")
-                .param("query", "") 
+                .param("query", "")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.value.content[0].title").value(mockPost.getTitle()));
@@ -171,7 +177,7 @@ class PostControllerTest {
     // --- POST /api/posts (createPost) Tests ---
 
     @Test
-    @WithMockUser(username = "user@example.com", roles = "USER") 
+    @WithMockUser(username = "user@example.com", roles = "USER")
     void testCreatePost_Success() throws Exception {
         CreatePostRequest createRequest = new CreatePostRequest("New Post", "This is the body.",
                 new String[] { "java", "spring" });
@@ -181,20 +187,20 @@ class PostControllerTest {
         when(tagRepo.findByName("spring")).thenReturn(Optional.of(mockTag2));
         when(postRepo.save(any(Post.class))).thenAnswer(invocation -> {
             Post savedPost = invocation.getArgument(0);
-            savedPost.setId(101L); 
+            savedPost.setId(101L);
             return savedPost;
         });
 
         mockMvc.perform(post("/api/posts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createRequest))
-                .with(csrf())) 
+                .with(csrf()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.value.id").value("101"))
                 .andExpect(jsonPath("$.value.title").value("New Post"))
                 .andExpect(jsonPath("$.value.authorUsername").value("testuser"))
                 .andExpect(jsonPath("$.value.tags").isArray())
-                .andExpect(jsonPath("$.value.tags").value(hasItems("java", "spring"))) 
+                .andExpect(jsonPath("$.value.tags").value(hasItems("java", "spring")))
                 .andExpect(jsonPath("$.error").doesNotExist());
     }
 
@@ -202,13 +208,13 @@ class PostControllerTest {
     @WithMockUser(username = "nonexistent@example.com", roles = "USER")
     void testCreatePost_Error_UserNotFound() throws Exception {
         CreatePostRequest createRequest = new CreatePostRequest("New Post", "Body", new String[] { "java" });
-        when(userRepo.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty()); 
+        when(userRepo.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
         mockMvc.perform(post("/api/posts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createRequest))
                 .with(csrf()))
-                .andExpect(status().isUnauthorized()) 
+                .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.value").doesNotExist())
                 .andExpect(jsonPath("$.error.message").value("User not found"))
                 .andExpect(jsonPath("$.error.code").value("401"));
@@ -221,13 +227,13 @@ class PostControllerTest {
 
         when(userRepo.findByEmail("user@example.com")).thenReturn(Optional.of(mockUser));
         when(tagRepo.findByName("java")).thenReturn(Optional.of(mockTag1));
-        when(tagRepo.findByName("unknown")).thenReturn(Optional.empty()); 
+        when(tagRepo.findByName("unknown")).thenReturn(Optional.empty());
 
         mockMvc.perform(post("/api/posts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createRequest))
                 .with(csrf()))
-                .andExpect(status().isBadRequest()) 
+                .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.value").doesNotExist())
                 .andExpect(jsonPath("$.error.message").value("Tag not found: unknown"))
                 .andExpect(jsonPath("$.error.code").value("400"));
@@ -241,7 +247,7 @@ class PostControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createRequest))
                 .with(csrf()))
-                .andExpect(status().isUnauthorized()); 
+                .andExpect(status().isUnauthorized());
     }
 
     // --- GET /api/posts/{id} (getPostById) Tests ---
@@ -264,7 +270,7 @@ class PostControllerTest {
 
         mockMvc.perform(get("/api/posts/{id}", 999L)
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound()) 
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.value").doesNotExist())
                 .andExpect(jsonPath("$.error.message").value("Post not found"))
                 .andExpect(jsonPath("$.error.code").value("404"));
@@ -276,17 +282,17 @@ class PostControllerTest {
     @WithMockUser(username = "user@example.com", roles = "USER")
     void testDeletePost_Success() throws Exception {
         when(postRepo.findById(100L)).thenReturn(Optional.of(mockPost));
-        when(replyRepo.save(any(Reply.class))).thenReturn(mockReply); 
-        doNothing().when(postRepo).delete(any(Post.class)); 
+        when(replyRepo.save(any(Reply.class))).thenReturn(mockReply);
+        doNothing().when(postRepo).delete(any(Post.class));
 
         mockMvc.perform(delete("/api/posts/{id}", 100L)
-                .with(csrf())) 
+                .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.value").isEmpty()) 
+                .andExpect(jsonPath("$.value").isEmpty())
                 .andExpect(jsonPath("$.error").doesNotExist());
 
-        verify(postRepo).delete(mockPost); 
-        verify(replyRepo).save(mockReply); 
+        verify(postRepo).delete(mockPost);
+        verify(replyRepo).save(mockReply);
     }
 
     @Test
@@ -296,7 +302,7 @@ class PostControllerTest {
 
         mockMvc.perform(delete("/api/posts/{id}", 999L)
                 .with(csrf()))
-                .andExpect(status().isNotFound()) 
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.value").doesNotExist())
                 .andExpect(jsonPath("$.error.message").value("Post not found"))
                 .andExpect(jsonPath("$.error.code").value("404"));
@@ -312,7 +318,7 @@ class PostControllerTest {
 
         mockMvc.perform(delete("/api/posts/{id}", 102L)
                 .with(csrf()))
-                .andExpect(status().isForbidden()) 
+                .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.value").doesNotExist())
                 .andExpect(jsonPath("$.error.message").value("You do not have permission to delete this post"))
                 .andExpect(jsonPath("$.error.code").value("403"));
@@ -322,7 +328,7 @@ class PostControllerTest {
     void testDeletePost_Unauthorized_NoAuth() throws Exception {
         mockMvc.perform(delete("/api/posts/{id}", 100L)
                 .with(csrf()))
-                .andExpect(status().isUnauthorized()); 
+                .andExpect(status().isUnauthorized());
     }
 
     // --- PUT /api/posts/{id} (updatePost) Tests ---
@@ -333,8 +339,8 @@ class PostControllerTest {
         CreatePostRequest updateRequest = new CreatePostRequest("Updated Title", "Updated Body",
                 new String[] { "java" });
 
-        when(postRepo.findById(100L)).thenReturn(Optional.of(mockPost)); 
-        when(tagRepo.findByName("java")).thenReturn(Optional.of(mockTag1)); 
+        when(postRepo.findById(100L)).thenReturn(Optional.of(mockPost));
+        when(tagRepo.findByName("java")).thenReturn(Optional.of(mockTag1));
         when(postRepo.save(any(Post.class))).thenAnswer(invocation -> {
             Post updatedPost = invocation.getArgument(0);
             updatedPost.setTags(new HashSet<>(Collections.singletonList(mockTag1)));
@@ -349,7 +355,7 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.value.id").value(String.valueOf(mockPost.getId())))
                 .andExpect(jsonPath("$.value.title").value("Updated Title"))
                 .andExpect(jsonPath("$.value.body").value("Updated Body"))
-                .andExpect(jsonPath("$.value.tags").value(hasItem("java"))) 
+                .andExpect(jsonPath("$.value.tags").value(hasItem("java")))
                 .andExpect(jsonPath("$.error").doesNotExist());
     }
 
@@ -358,7 +364,7 @@ class PostControllerTest {
     void testUpdatePost_Error_PostNotFound() throws Exception {
         CreatePostRequest updateRequest = new CreatePostRequest("Updated Title", "Updated Body",
                 new String[] { "java" });
-        when(postRepo.findById(anyLong())).thenReturn(Optional.empty()); 
+        when(postRepo.findById(anyLong())).thenReturn(Optional.empty());
 
         mockMvc.perform(put("/api/posts/{id}", 999L)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -374,7 +380,7 @@ class PostControllerTest {
         User anotherUser = new User(2L, "another@example.com", "pass", "anotheruser");
         Post postByOtherUser = new Post(102L, "Other's Post", "Body", anotherUser, new HashSet<>(), new HashSet<>());
 
-        when(postRepo.findById(102L)).thenReturn(Optional.of(postByOtherUser)); 
+        when(postRepo.findById(102L)).thenReturn(Optional.of(postByOtherUser));
 
         CreatePostRequest updateRequest = new CreatePostRequest("Updated Title", "Updated Body",
                 new String[] { "java" });
@@ -393,9 +399,9 @@ class PostControllerTest {
         CreatePostRequest updateRequest = new CreatePostRequest("Updated Title", "Updated Body",
                 new String[] { "java", "unknown" });
 
-        when(postRepo.findById(100L)).thenReturn(Optional.of(mockPost)); 
+        when(postRepo.findById(100L)).thenReturn(Optional.of(mockPost));
         when(tagRepo.findByName("java")).thenReturn(Optional.of(mockTag1));
-        when(tagRepo.findByName("unknown")).thenReturn(Optional.empty()); 
+        when(tagRepo.findByName("unknown")).thenReturn(Optional.empty());
 
         mockMvc.perform(put("/api/posts/{id}", 100L)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -414,6 +420,6 @@ class PostControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateRequest))
                 .with(csrf()))
-                .andExpect(status().isUnauthorized()); 
+                .andExpect(status().isUnauthorized());
     }
 }

@@ -20,10 +20,13 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class JWTFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private MyUserDetailsService userDetailsService;
-    @Autowired
-    private JWTUtil jwtUtil;
+    private final MyUserDetailsService userDetailsService;
+    private final JWTUtil jwtUtil;
+
+    public JWTFilter(MyUserDetailsService userDetailsService, JWTUtil jwtUtil) {
+        this.userDetailsService = userDetailsService;
+        this.jwtUtil = jwtUtil;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
