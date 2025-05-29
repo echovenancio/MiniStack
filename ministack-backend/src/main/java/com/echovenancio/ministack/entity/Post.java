@@ -26,9 +26,6 @@ import lombok.ToString;
 
 @Entity
 @ToString
-@NoArgsConstructor
-@Getter
-@Setter
 public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -52,4 +49,87 @@ public class Post {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "post")
     private Set<Reply> replies;
+
+    public Post() {
+    }
+
+    public Post(String title, String body, Set<Tag> tags, User user) {
+        this.title = title;
+        this.body = body;
+        this.tags = tags;
+        this.user = user;
+    }
+
+    public Post(Long id, String title, String body, User user) {
+        this.id = id;
+        this.title = title;
+        this.body = body;
+        this.user = user;
+    }
+
+    public Post(Long id, String title, String body, User user, Set<Tag> tags, Set<Reply> replies) {
+        this.id = id;
+        this.title = title;
+        this.body = body;
+        this.tags = tags;
+        this.user = user;
+        this.replies = replies;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getBody() {
+        return body;
+    }
+
+    public void setBody(String body) {
+        this.body = body;
+    }
+
+    public Set<Tag> getTags() {
+        return tags;
+    }
+
+    public void setTags(Set<Tag> tags) {
+        this.tags = tags;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Set<Reply> getReplies() {
+        return replies;
+    }
+
+    public void setReplies(Set<Reply> replies) {
+        this.replies = replies;
+    }
+
 }
