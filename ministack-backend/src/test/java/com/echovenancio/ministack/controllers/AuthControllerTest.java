@@ -6,8 +6,8 @@ import com.echovenancio.ministack.models.LoginCredentials;
 import com.echovenancio.ministack.models.RegisterRequest;
 import com.echovenancio.ministack.repository.UserRepository;
 import com.echovenancio.ministack.security.JWTFilter; 
-import com.echovenancio.ministack.security.JWTUtil; 
-
+import com.echovenancio.ministack.security.JWTUtil;
+import com.echovenancio.ministack.service.MyUserDetailsService;
 import com.fasterxml.jackson.databind.ObjectMapper; 
 
 import org.junit.jupiter.api.Test;
@@ -34,10 +34,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = AuthController.class, 
-        excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
-                JWTFilter.class
-        }))
+@WebMvcTest(controllers = AuthController.class)
 @AutoConfigureMockMvc(addFilters = true)
 @ContextConfiguration(classes = TestSecurityConfig.class)
 class AuthControllerTest {
@@ -50,6 +47,9 @@ class AuthControllerTest {
 
     @MockitoBean 
     private UserRepository userRepo;
+
+    @MockitoBean
+    private MyUserDetailsService userDetailsService;
 
     @MockitoBean
     private JWTUtil jwtUtil;
@@ -79,7 +79,7 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registerRequest))
-                .with(csrf())) // <--- ADD THIS LINE FOR POST REQUESTS
+                .with(csrf())) 
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.jwt-token").value("mocked-jwt-token-for-test@example.com"));
     }
@@ -91,7 +91,8 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(registerRequest)))
+                .content(objectMapper.writeValueAsString(registerRequest))
+                .with(csrf()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Passwords do not match"));
     }
@@ -107,7 +108,8 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(registerRequest)))
+                .content(objectMapper.writeValueAsString(registerRequest))
+                .with(csrf()))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.error").value("Internal server error"));
     }
@@ -125,6 +127,7 @@ class AuthControllerTest {
         when(jwtUtil.generateToken("login@example.com")).thenReturn("mocked-jwt-token-for-login@example.com");
 
         mockMvc.perform(post("/api/auth/login")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginCredentials)))
                 .andExpect(status().isOk())
@@ -140,6 +143,7 @@ class AuthControllerTest {
                 .thenThrow(new BadCredentialsException("Invalid credentials"));
 
         mockMvc.perform(post("/api/auth/login")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginCredentials)))
                 .andExpect(status().isUnauthorized())
@@ -159,6 +163,7 @@ class AuthControllerTest {
         when(jwtUtil.generateToken("login@example.com")).thenThrow(new RuntimeException("Token generation error"));
 
         mockMvc.perform(post("/api/auth/login")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginCredentials)))
                 .andExpect(status().isInternalServerError())

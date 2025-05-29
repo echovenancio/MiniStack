@@ -9,6 +9,8 @@ import com.echovenancio.ministack.repository.PostRepository;
 import com.echovenancio.ministack.repository.ReplyRepository;
 import com.echovenancio.ministack.repository.UserRepository;
 import com.echovenancio.ministack.security.JWTFilter;
+import com.echovenancio.ministack.security.JWTUtil;
+import com.echovenancio.ministack.service.MyUserDetailsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,10 +38,9 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
-@WebMvcTest(controllers = ReplyController.class, excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
-        JWTFilter.class } 
-))
+@WebMvcTest(controllers = ReplyController.class)
 @AutoConfigureMockMvc(addFilters = true) 
 @ContextConfiguration(classes = TestSecurityConfig.class) 
 class ReplyControllerTest {
@@ -58,6 +59,12 @@ class ReplyControllerTest {
 
     @MockitoBean
     private UserRepository userRepo;
+
+    @MockitoBean 
+    private MyUserDetailsService userDetailsService;
+
+    @MockitoBean
+    private JWTUtil jwtUtil;
 
     private User mockUser;
     private Post mockPost;
@@ -199,6 +206,7 @@ class ReplyControllerTest {
         when(replyRepo.save(any(Reply.class))).thenReturn(newReply);
 
         mockMvc.perform(post("/api/posts/{postId}/replies/", mockPost.getId())
+                .with(csrf()) 
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -222,6 +230,7 @@ class ReplyControllerTest {
         when(replyRepo.save(any(Reply.class))).thenReturn(newNestedReply);
 
         mockMvc.perform(post("/api/posts/{postId}/replies/", mockPost.getId())
+                .with(csrf()) 
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -239,10 +248,10 @@ class ReplyControllerTest {
         CreateReplyRequest request = new CreateReplyRequest("Some reply", null);
 
         mockMvc.perform(post("/api/posts/{postId}/replies/", mockPost.getId())
+                .with(csrf()) 
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized()); // No @WithMockUser
-        // No repository interactions should happen
+                .andExpect(status().isUnauthorized());  
         verifyNoInteractions(userRepo, postRepo, replyRepo);
     }
 
@@ -254,6 +263,7 @@ class ReplyControllerTest {
         when(userRepo.findByEmail(eq("nonexistent@example.com"))).thenReturn(Optional.empty());
 
         mockMvc.perform(post("/api/posts/{postId}/replies/", mockPost.getId())
+                .with(csrf()) 
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
@@ -273,6 +283,7 @@ class ReplyControllerTest {
         when(postRepo.findById(anyLong())).thenReturn(Optional.empty());
 
         mockMvc.perform(post("/api/posts/{postId}/replies/", 999L) 
+                .with(csrf()) 
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
@@ -292,6 +303,7 @@ class ReplyControllerTest {
         when(replyRepo.findById(anyLong())).thenReturn(Optional.empty()); 
 
         mockMvc.perform(post("/api/posts/{postId}/replies/", mockPost.getId())
+                .with(csrf()) 
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -311,6 +323,7 @@ class ReplyControllerTest {
         doNothing().when(replyRepo).delete(any(Reply.class));
 
         mockMvc.perform(delete("/api/posts/{postId}/replies/{replyId}", mockPost.getId(), mockReply.getId())
+                .with(csrf()) 
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -324,6 +337,7 @@ class ReplyControllerTest {
         when(replyRepo.findById(anyLong())).thenReturn(Optional.empty());
 
         mockMvc.perform(delete("/api/posts/{postId}/replies/{replyId}", mockPost.getId(), 999L)
+                .with(csrf()) 
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error.message").value("Reply not found"));
@@ -338,6 +352,7 @@ class ReplyControllerTest {
         when(replyRepo.findById(eq(mockReply.getId()))).thenReturn(Optional.of(mockReply));
 
         mockMvc.perform(delete("/api/posts/{postId}/replies/{replyId}", mockPost.getId(), mockReply.getId())
+                .with(csrf()) 
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.error.message").value("You do not have permission to delete this reply"));
@@ -349,6 +364,7 @@ class ReplyControllerTest {
     @Test
     void deleteReply_ShouldReturnUnauthorized_WhenNotAuthenticated() throws Exception {
         mockMvc.perform(delete("/api/posts/{postId}/replies/{replyId}", mockPost.getId(), mockReply.getId())
+                .with(csrf()) 
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
         verifyNoInteractions(replyRepo);
@@ -366,6 +382,7 @@ class ReplyControllerTest {
         when(replyRepo.save(any(Reply.class))).thenReturn(updatedReply);
 
         mockMvc.perform(put("/api/posts/{postId}/replies/{replyId}", mockPost.getId(), mockReply.getId())
+                .with(csrf()) 
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -383,6 +400,7 @@ class ReplyControllerTest {
         when(replyRepo.findById(anyLong())).thenReturn(Optional.empty());
 
         mockMvc.perform(put("/api/posts/{postId}/replies/{replyId}", mockPost.getId(), 999L)
+                .with(csrf()) 
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
@@ -399,6 +417,7 @@ class ReplyControllerTest {
         when(replyRepo.findById(eq(mockReply.getId()))).thenReturn(Optional.of(mockReply));
 
         mockMvc.perform(put("/api/posts/{postId}/replies/{replyId}", mockPost.getId(), mockReply.getId())
+                .with(csrf()) 
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden())
@@ -412,6 +431,7 @@ class ReplyControllerTest {
     void updateReply_ShouldReturnUnauthorized_WhenNotAuthenticated() throws Exception {
         UpdateReplyRequest request = new UpdateReplyRequest("Updated reply body.");
         mockMvc.perform(put("/api/posts/{postId}/replies/{replyId}", mockPost.getId(), mockReply.getId())
+                .with(csrf()) 
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
