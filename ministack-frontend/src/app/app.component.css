@@ -1,28 +1,10 @@
-/* Basic Resets & Global Styles (Consider moving some of these to styles.css in root) */
-:root {
-    --primary-color: #0A95FF;
-    --primary-dark-color: #0076D4;
-    --text-color: #232629;
-    --light-text-color: #6A737C;
-    --bg-color: #F8F9F9; /* Light background for the overall page */
-    --main-content-bg: #FFFFFF; /* White background for main content area */
-    --border-color: #D6D9DC;
-    --nav-bg: #F0F2F2;
-    --navbar-bg: #FFFFFF;
-    --link-color: #0077CC;
-    --tag-bg: #E1ECF4;
-    --tag-color: #39739D;
-    --answered-green: #2F6F44;
-    --answered-bg: #D4EDDA;
-}
-
-a { /* Keep these if you want component-specific link styling */
+a {
     text-decoration: none;
     color: var(--link-color);
 }
 
 a:hover {
-    color: var(--primary-color);
+    color: var(--primary-color); /* Hover on links should be primary color */
 }
 
 
@@ -37,6 +19,7 @@ a:hover {
     position: sticky;
     top: 0;
     z-index: 1000;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2); /* Darker shadow for dark mode */
 }
 
 .navbar-left, .navbar-right {
@@ -54,10 +37,12 @@ a:hover {
     font-size: 1.5rem;
     font-weight: bold;
     color: var(--primary-color);
-    margin-right: 20px; /* Keep some margin if needed, but no longer next to products */
+    padding: 5px 8px;
+    border-radius: 3px;
 }
-
-/* Removed: .main-nav-links a styles */
+.logo:hover {
+    background-color: var(--nav-item-hover-bg);
+}
 
 .search-bar {
     width: 100%;
@@ -66,11 +51,17 @@ a:hover {
     border-radius: 5px;
     font-size: 0.9em;
     outline: none;
+    background-color: var(--nav-item-hover-bg); /* Darker background for search bar */
+    color: var(--text-color); /* Light text color */
+}
+.search-bar::placeholder {
+    color: var(--light-text-color); /* Lighter placeholder text */
 }
 
 .search-bar:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(10, 149, 255, 0.2);
+    box-shadow: 0 0 0 3px rgba(10, 149, 255, 0.4); /* Brighter shadow on focus */
+    background-color: var(--content-bg-color); /* Same as content background on focus */
 }
 
 .nav-btn {
@@ -82,23 +73,32 @@ a:hover {
     color: var(--primary-color);
     background-color: transparent;
     cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
 }
 
 .nav-btn.btn-primary {
     background-color: var(--primary-color);
-    color: var(--navbar-bg);
+    color: white; /* Keep white for primary button text */
 }
 
 .nav-btn:hover {
-    opacity: 0.9;
+    opacity: 1;
+    background-color: var(--primary-color);
+    color: white;
 }
+
+.nav-btn.btn-primary:hover {
+    background-color: var(--primary-dark-color);
+    color: white;
+}
+
 
 /* Main Container Layout */
 .container {
     display: flex;
     flex: 1;
-    padding-top: 10px;
-    /* Removed: background-color if body handles it, or if main-content has its own */
+    padding: 10px 0;
+    background-color: var(--page-bg-color); /* Overall page background */
 }
 
 /* Sidebar */
@@ -106,10 +106,10 @@ a:hover {
     width: 160px;
     padding: 10px 0;
     border-right: 1px solid var(--border-color);
-    background-color: var(--navbar-bg); /* Sidebar background */
+    background-color: var(--content-bg-color); /* Dark content background for sidebar */
     position: sticky;
     top: 50px;
-    height: calc(100vh - 50px);
+    height: calc(100vh - 50px - 20px);
     overflow-y: auto;
     flex-shrink: 0;
 }
@@ -121,28 +121,27 @@ a:hover {
 
 .sidebar-nav .nav-link {
     padding: 8px 15px 8px 10px;
-    color: var(--light-text-color);
+    color: var(--light-text-color); /* Light text for links */
     font-size: 0.9em;
     display: block;
 }
 
 .sidebar-nav .nav-link:hover:not(.active) {
-    background-color: var(--nav-bg);
-    color: var(--text-color);
+    background-color: var(--nav-item-hover-bg); /* Darker hover background */
+    color: var(--text-color); /* Lighter text color on hover */
 }
 
 .sidebar-nav .nav-link.active {
     font-weight: bold;
-    background-color: var(--nav-bg);
+    background-color: var(--nav-item-hover-bg);
     color: var(--text-color);
     border-right: 3px solid var(--primary-color);
 }
 
 .nav-sub-list {
     margin-left: 20px;
-    border-bottom: 1px solid var(--border-color); /* Kept border for separation */
-    padding-bottom: 10px;
-    margin-bottom: 10px;
+    padding-bottom: 0;
+    margin-bottom: 0;
 }
 
 .nav-sub-list li a {
@@ -153,8 +152,11 @@ a:hover {
 .main-content {
     flex-grow: 1;
     padding: 20px;
-    background-color: var(--main-content-bg); /* Explicit white background */
-    border-left: 1px solid var(--border-color); /* Optional: add a left border for separation if desired */
+    background-color: var(--content-bg-color); /* Dark content background for main content */
+    border-left: 1px solid var(--border-color);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2); /* Darker shadow */
+    margin-left: 10px;
+    border-radius: 5px;
 }
 
 .questions-header {
@@ -162,13 +164,14 @@ a:hover {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    padding-bottom: 10px; /* Added padding to align with border */
-    border-bottom: 1px solid var(--border-color); /* Added border-bottom */
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .questions-header h1 {
     font-size: 1.8rem;
     font-weight: normal;
+    color: var(--text-color); /* Ensure heading is light */
 }
 
 .btn {
@@ -215,7 +218,7 @@ a:hover {
 .filter-btn {
     padding: 8px 12px;
     border: none;
-    background-color: var(--navbar-bg);
+    background-color: var(--navbar-bg); /* Dark background for filter buttons */
     cursor: pointer;
     font-size: 0.9em;
     color: var(--light-text-color);
@@ -227,7 +230,7 @@ a:hover {
 }
 
 .filter-btn:hover:not(.active) {
-    background-color: var(--nav-bg);
+    background-color: var(--nav-item-hover-bg);
     color: var(--text-color);
 }
 
@@ -246,17 +249,18 @@ a:hover {
 
 .question-card {
     display: flex;
-    padding: 15px; /* Added padding to the card itself */
-    border: 1px solid var(--border-color); /* Added border */
-    border-radius: 5px; /* Added border-radius */
-    background-color: var(--navbar-bg); /* Card background */
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Subtle shadow for depth */
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    background-color: var(--content-bg-color); /* Dark background for each card */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15); /* Darker shadow */
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
-/* No longer need border-bottom on individual cards if they have their own border */
-/* .question-card:last-child {
-    border-bottom: none;
-} */
+.question-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3); /* Stronger shadow on hover */
+}
 
 .question-stats {
     display: flex;
@@ -281,8 +285,6 @@ a:hover {
     color: var(--text-color);
     font-size: 1.1em;
 }
-
-/* Removed: .stat for views */
 
 .question-stats .stat.answers span {
     color: var(--text-color);
@@ -311,12 +313,12 @@ a:hover {
 }
 
 .question-summary .question-title {
-    color: var(--link-color);
+    color: var(--link-color); /* Light link color */
     font-weight: normal;
 }
 
 .question-summary .question-title:hover {
-    color: var(--primary-dark-color);
+    color: var(--primary-color); /* Primary color on hover */
 }
 
 .question-excerpt {
@@ -338,8 +340,8 @@ a:hover {
 }
 
 .tag {
-    background-color: var(--tag-bg);
-    color: var(--tag-color);
+    background-color: var(--tag-bg); /* Dark tag background */
+    color: var(--tag-color); /* Light tag text */
     padding: 5px 8px;
     border-radius: 3px;
     font-size: 0.75em;
@@ -347,8 +349,8 @@ a:hover {
 }
 
 .tag:hover {
-    background-color: #D3E4F1;
-    color: #2F5D88;
+    background-color: #4A5C78; /* Slightly lighter dark tag hover */
+    color: var(--tag-color);
 }
 
 .question-meta {
@@ -362,31 +364,18 @@ a:hover {
 }
 
 .question-meta a:hover {
-    color: var(--primary-dark-color);
+    color: var(--primary-color);
 }
 
 /* Footer */
 .footer {
-    background-color: #333;
-    color: #CCC;
-    padding: 20px;
+    background-color: var(--footer-bg);
+    color: var(--footer-text-color);
+    padding: 15px 20px;
     text-align: center;
     font-size: 0.8em;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-top: auto;
 }
-
-.footer-nav a {
-    color: #CCC;
-    margin-left: 15px;
-}
-
-.footer-nav a:hover {
-    color: white;
-}
-
 
 /* Basic Responsiveness (for smaller screens) */
 @media (max-width: 768px) {
@@ -405,10 +394,6 @@ a:hover {
         order: 3;
         width: 100%;
         margin: 5px 0;
-    }
-
-    .main-nav-links { /* Still here for clarity if you un-hide later */
-        display: none;
     }
 
     .logo {
@@ -457,6 +442,10 @@ a:hover {
 
     .main-content {
         padding: 15px;
+        margin-left: 0;
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+        border-radius: 0;
     }
 
     .questions-meta-filters {
@@ -500,9 +489,5 @@ a:hover {
     .footer {
         flex-direction: column;
         gap: 10px;
-    }
-
-    .footer-nav a {
-        margin: 0 8px;
     }
 }
