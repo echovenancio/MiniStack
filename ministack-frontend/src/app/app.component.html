@@ -1,5 +1,109 @@
-<main class="main">
-  Hello World!
-</main>
+<header class="navbar">
+    <div class="navbar-left">
+        <a routerLink="/" class="logo">MiniStack</a>
+        </div>
+    <div class="navbar-center">
+        <input type="text" placeholder="Search..." class="search-bar">
+    </div>
+    <div class="navbar-right">
+        <a routerLink="/login" class="nav-btn">Log in</a>
+        <a routerLink="/signup" class="nav-btn btn-primary">Sign up</a>
+    </div>
+</header>
 
+<div class="container">
+    <aside class="sidebar">
+        <nav class="sidebar-nav">
+            <a routerLink="/" class="nav-link active">Home</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="questions-header">
+            <h1>Top Questions</h1>
+            <button class="btn btn-primary">Ask Question</button>
+        </div>
+
+        <div class="questions-meta-filters">
+            <p><span class="question-count">2,456,879</span> questions</p>
+            <div class="filters">
+                <button class="filter-btn active">Newest</button>
+                <button class="filter-btn">Active</button>
+                <button class="filter-btn">Bountied</button>
+                <button class="filter-btn">Unanswered</button>
+            </div>
+        </div>
+
+        <div class="question-list">
+            <div class="question-card">
+                <div class="question-stats">
+                    <div class="stat"><span>123</span> votes</div>
+                    <div class="stat answers"><span>45</span> answers</div>
+                    </div>
+                <div class="question-summary">
+                    <h3><a routerLink="/question/123" class="question-title">How to correctly use asynchronous operations in JavaScript with async/await?</a></h3>
+                    <div class="question-excerpt">
+                        I'm trying to understand the best practices for using `async/await` in JavaScript...
+                    </div>
+                    <div class="question-tags">
+                        <span class="tag">javascript</span>
+                        <span class="tag">asynchronous</span>
+                        <span class="tag">async-await</span>
+                        <span class="tag">promises</span>
+                    </div>
+                    <div class="question-meta">
+                        asked <span class="time">2 hours ago</span> by <a routerLink="/user/johndoe">John Doe</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <div class="question-stats">
+                    <div class="stat"><span>87</span> votes</div>
+                    <div class="stat answers"><span>12</span> answers</div>
+                    </div>
+                <div class="question-summary">
+                    <h3><a routerLink="/question/87" class="question-title">What is the difference between `==` and `===` in PHP?</a></h3>
+                    <div class="question-excerpt">
+                        I'm confused about the strict vs. loose comparison operators in PHP. Can someone explain...
+                    </div>
+                    <div class="question-tags">
+                        <span class="tag">php</span>
+                        <span class="tag">operators</span>
+                        <span class="tag">comparison</span>
+                    </div>
+                    <div class="question-meta">
+                        asked <span class="time">yesterday</span> by <a routerLink="/user/janesmith">Jane Smith</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <div class="question-stats">
+                    <div class="stat"><span>201</span> votes</div>
+                    <div class="stat answers answered"><span>78</span> answers</div>
+                    </div>
+                <div class="question-summary">
+                    <h3><a routerLink="/question/201" class="question-title">Best way to manage state in a React application?</a></h3>
+                    <div class="question-excerpt">
+                        Currently using useState and useContext but looking for more scalable solutions...
+                    </div>
+                    <div class="question-tags">
+                        <span class="tag">reactjs</span>
+                        <span class="tag">state-management</span>
+                        <span class="tag">redux</span>
+                        <span class="tag">context-api</span>
+                    </div>
+                    <div class="question-meta">
+                        asked <span class="time">3 days ago</span> by <a routerLink="/user/reactdev">React Dev</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<footer class="footer">
+    <p>&copy; 2025 MiniStack Inc. All rights reserved.</p>
+</footer>
 <router-outlet />

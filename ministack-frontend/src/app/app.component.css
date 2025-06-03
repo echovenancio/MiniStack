@@ -1,0 +1,508 @@
+/* Basic Resets & Global Styles (Consider moving some of these to styles.css in root) */
+:root {
+    --primary-color: #0A95FF;
+    --primary-dark-color: #0076D4;
+    --text-color: #232629;
+    --light-text-color: #6A737C;
+    --bg-color: #F8F9F9; /* Light background for the overall page */
+    --main-content-bg: #FFFFFF; /* White background for main content area */
+    --border-color: #D6D9DC;
+    --nav-bg: #F0F2F2;
+    --navbar-bg: #FFFFFF;
+    --link-color: #0077CC;
+    --tag-bg: #E1ECF4;
+    --tag-color: #39739D;
+    --answered-green: #2F6F44;
+    --answered-bg: #D4EDDA;
+}
+
+a { /* Keep these if you want component-specific link styling */
+    text-decoration: none;
+    color: var(--link-color);
+}
+
+a:hover {
+    color: var(--primary-color);
+}
+
+
+/* Navbar */
+.navbar {
+    background-color: var(--navbar-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 8px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.navbar-left, .navbar-right {
+    display: flex;
+    align-items: center;
+}
+
+.navbar-center {
+    flex-grow: 1;
+    max-width: 600px;
+    margin: 0 20px;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-right: 20px; /* Keep some margin if needed, but no longer next to products */
+}
+
+/* Removed: .main-nav-links a styles */
+
+.search-bar {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 0.9em;
+    outline: none;
+}
+
+.search-bar:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(10, 149, 255, 0.2);
+}
+
+.nav-btn {
+    padding: 8px 12px;
+    border: 1px solid var(--primary-color);
+    border-radius: 3px;
+    font-size: 0.9em;
+    margin-left: 10px;
+    color: var(--primary-color);
+    background-color: transparent;
+    cursor: pointer;
+}
+
+.nav-btn.btn-primary {
+    background-color: var(--primary-color);
+    color: var(--navbar-bg);
+}
+
+.nav-btn:hover {
+    opacity: 0.9;
+}
+
+/* Main Container Layout */
+.container {
+    display: flex;
+    flex: 1;
+    padding-top: 10px;
+    /* Removed: background-color if body handles it, or if main-content has its own */
+}
+
+/* Sidebar */
+.sidebar {
+    width: 160px;
+    padding: 10px 0;
+    border-right: 1px solid var(--border-color);
+    background-color: var(--navbar-bg); /* Sidebar background */
+    position: sticky;
+    top: 50px;
+    height: calc(100vh - 50px);
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-nav .nav-link {
+    padding: 8px 15px 8px 10px;
+    color: var(--light-text-color);
+    font-size: 0.9em;
+    display: block;
+}
+
+.sidebar-nav .nav-link:hover:not(.active) {
+    background-color: var(--nav-bg);
+    color: var(--text-color);
+}
+
+.sidebar-nav .nav-link.active {
+    font-weight: bold;
+    background-color: var(--nav-bg);
+    color: var(--text-color);
+    border-right: 3px solid var(--primary-color);
+}
+
+.nav-sub-list {
+    margin-left: 20px;
+    border-bottom: 1px solid var(--border-color); /* Kept border for separation */
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.nav-sub-list li a {
+    padding-left: 0;
+}
+
+/* Main Content Area */
+.main-content {
+    flex-grow: 1;
+    padding: 20px;
+    background-color: var(--main-content-bg); /* Explicit white background */
+    border-left: 1px solid var(--border-color); /* Optional: add a left border for separation if desired */
+}
+
+.questions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px; /* Added padding to align with border */
+    border-bottom: 1px solid var(--border-color); /* Added border-bottom */
+}
+
+.questions-header h1 {
+    font-size: 1.8rem;
+    font-weight: normal;
+}
+
+.btn {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 3px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark-color);
+}
+
+.questions-meta-filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.9em;
+    color: var(--light-text-color);
+}
+
+.question-count {
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+.filters {
+    display: flex;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.filter-btn {
+    padding: 8px 12px;
+    border: none;
+    background-color: var(--navbar-bg);
+    cursor: pointer;
+    font-size: 0.9em;
+    color: var(--light-text-color);
+    border-right: 1px solid var(--border-color);
+}
+
+.filter-btn:last-child {
+    border-right: none;
+}
+
+.filter-btn:hover:not(.active) {
+    background-color: var(--nav-bg);
+    color: var(--text-color);
+}
+
+.filter-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* Question List & Cards */
+.question-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.question-card {
+    display: flex;
+    padding: 15px; /* Added padding to the card itself */
+    border: 1px solid var(--border-color); /* Added border */
+    border-radius: 5px; /* Added border-radius */
+    background-color: var(--navbar-bg); /* Card background */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Subtle shadow for depth */
+}
+
+/* No longer need border-bottom on individual cards if they have their own border */
+/* .question-card:last-child {
+    border-bottom: none;
+} */
+
+.question-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    width: 100px;
+    flex-shrink: 0;
+    margin-right: 15px;
+    font-size: 0.9em;
+    color: var(--light-text-color);
+}
+
+.question-stats .stat {
+    margin-bottom: 5px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.question-stats .stat span {
+    display: block;
+    font-weight: bold;
+    color: var(--text-color);
+    font-size: 1.1em;
+}
+
+/* Removed: .stat for views */
+
+.question-stats .stat.answers span {
+    color: var(--text-color);
+}
+
+.question-stats .stat.answers.answered span {
+    color: var(--answered-green);
+}
+
+.question-stats .stat.answers.answered {
+    background-color: var(--answered-bg);
+    padding: 3px 5px;
+    border-radius: 3px;
+    color: var(--answered-green);
+    border: 1px solid var(--answered-green);
+}
+
+
+.question-summary {
+    flex-grow: 1;
+}
+
+.question-summary h3 {
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+}
+
+.question-summary .question-title {
+    color: var(--link-color);
+    font-weight: normal;
+}
+
+.question-summary .question-title:hover {
+    color: var(--primary-dark-color);
+}
+
+.question-excerpt {
+    font-size: 0.9em;
+    color: var(--light-text-color);
+    margin-bottom: 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.question-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.tag {
+    background-color: var(--tag-bg);
+    color: var(--tag-color);
+    padding: 5px 8px;
+    border-radius: 3px;
+    font-size: 0.75em;
+    white-space: nowrap;
+}
+
+.tag:hover {
+    background-color: #D3E4F1;
+    color: #2F5D88;
+}
+
+.question-meta {
+    text-align: right;
+    font-size: 0.8em;
+    color: var(--light-text-color);
+}
+
+.question-meta a {
+    color: var(--link-color);
+}
+
+.question-meta a:hover {
+    color: var(--primary-dark-color);
+}
+
+/* Footer */
+.footer {
+    background-color: #333;
+    color: #CCC;
+    padding: 20px;
+    text-align: center;
+    font-size: 0.8em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+}
+
+.footer-nav a {
+    color: #CCC;
+    margin-left: 15px;
+}
+
+.footer-nav a:hover {
+    color: white;
+}
+
+
+/* Basic Responsiveness (for smaller screens) */
+@media (max-width: 768px) {
+    .navbar {
+        flex-wrap: wrap;
+        padding: 8px 10px;
+    }
+
+    .navbar-left, .navbar-right {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 5px;
+    }
+
+    .navbar-center {
+        order: 3;
+        width: 100%;
+        margin: 5px 0;
+    }
+
+    .main-nav-links { /* Still here for clarity if you un-hide later */
+        display: none;
+    }
+
+    .logo {
+        margin-right: 0;
+    }
+
+    .nav-btn {
+        margin: 0 5px;
+    }
+
+    .container {
+        flex-direction: column;
+        padding-top: 0;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        padding: 0;
+    }
+
+    .sidebar-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 5px 0;
+    }
+
+    .sidebar-nav .nav-link {
+        padding: 5px 10px;
+        border-right: none;
+        border-bottom: none;
+    }
+
+    .sidebar-nav .nav-link.active {
+        border-right: none;
+        border-bottom: 3px solid var(--primary-color);
+    }
+
+    .nav-sub-list {
+        display: none;
+    }
+
+    .main-content {
+        padding: 15px;
+    }
+
+    .questions-meta-filters {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .filters {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .filter-btn {
+        flex: 1;
+        text-align: center;
+    }
+
+    .question-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .question-stats {
+        width: 100%;
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 15px;
+        margin-right: 0;
+    }
+
+    .question-stats .stat {
+        text-align: left;
+    }
+
+    .question-meta {
+        text-align: left;
+    }
+
+    .footer {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .footer-nav a {
+        margin: 0 8px;
+    }
+}
